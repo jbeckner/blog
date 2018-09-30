@@ -17,6 +17,7 @@ import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
 import { PostService, Post } from '../services/PostService';
 import Modal from '@material-ui/core/Modal';
+import TextField from '@material-ui/core/TextField';
 
 const styles: StyleRulesCallback<any> = theme => ({
     layout: {
@@ -54,7 +55,7 @@ const styles: StyleRulesCallback<any> = theme => ({
     },
     card: {
       display: 'flex',
-      
+      marginBottom: '8px'
     },
     cardDetails: {
       flex: 1,
@@ -78,6 +79,20 @@ const styles: StyleRulesCallback<any> = theme => ({
       marginTop: theme.spacing.unit * 8,
       padding: `${theme.spacing.unit * 6}px 0`,
     },
+    paper: {
+        position: 'absolute',
+        width: theme.spacing.unit * 50,
+        backgroundColor: theme.palette.background.paper,
+        boxShadow: theme.shadows[5],
+        padding: theme.spacing.unit * 7,
+      },
+      textField: {
+          width:'100%'
+      },
+      modalButton:{
+          marginTop: '10px',
+          marginRight: '6px'
+      }
   });
   
   const sections = [
@@ -115,20 +130,12 @@ const styles: StyleRulesCallback<any> = theme => ({
   ];
   
   const social = ['GitHub', 'Twitter', 'Facebook'];
-
-  function rand() {
-    return Math.round(Math.random() * 20) - 10;
-  }
-
   
   function getModalStyle() {
-    const top = 50 + rand();
-    const left = 50 + rand();
-  
     return {
       top: '50%',
       left: '50%',
-      transform: `translate(-${top}%, -${left}%)`,
+      transform: `translate(-58%, -56%)`,
     };
   }
 
@@ -138,7 +145,9 @@ export namespace Blog {
     }
     export interface State {
         posts: Post[],
-        open: boolean
+        open: boolean,
+        newPostText: string,
+        newPostTitle: string
     }
 }
 
@@ -147,25 +156,16 @@ class Blog extends React.Component<Blog.Props, Blog.State> {
         super(props);
         this.state = {
             posts : [],
-            open: false
+            open: false,
+            newPostText: "",
+            newPostTitle: ""
         }
     }
 
     componentDidMount() {
         PostService.getPosts().then((posts) => {
-            this.setState({ posts: posts.sort(this.sortByDateModified) });
+            this.setState({ posts: posts });
         })
-    }
-
-
-    sortByDateModified = (a: Post, b: Post) => {
-        if (a.dateModified < b.dateModified) {
-            return 1;
-        } else if (a.dateModified > b.dateModified) {
-            return -1;
-        } else {
-            return 0;
-        }
     }
 
     handleOpen = () => {
@@ -173,8 +173,22 @@ class Blog extends React.Component<Blog.Props, Blog.State> {
     };
     
     handleClose = () => {
-        this.setState({ open: false });
+        this.setState({ open: false, newPostText: "", newPostTitle: "" });
     };
+
+    submitPost = () => {
+        let newPost : Post = {
+            id: new Date().getSeconds(),
+            title: this.state.newPostTitle,
+            body: this.state.newPostText
+        }
+
+        PostService.savePost(newPost).then(post => {
+            PostService.getPosts().then((posts) => {
+                this.setState({ posts: posts, open: false, newPostText: "", newPostTitle: ""  });
+            })
+        });
+    }
 
     render() {
         
@@ -185,13 +199,35 @@ class Blog extends React.Component<Blog.Props, Blog.State> {
             aria-describedby="simple-modal-description"
             open={this.state.open}
             onClose={this.handleClose}
-        >
+            >
             <div style={getModalStyle()} className={classes.paper}>
             <Typography variant="title" id="modal-title">
-                Text in a modal
+                Enter your new post content.
             </Typography>
             <Typography variant="subheading" id="simple-modal-description">
-                Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
+                <TextField     
+                        label="Title"                                    
+                        rows={1}
+                        rowsMax={1}
+                        className={classes.textField}
+                        value={this.state.newPostTitle}
+                        onChange={e => this.setState({newPostTitle : e.target.value})}
+                    />
+                <TextField
+                    label="Content"
+                    multiline                   
+                    rows={10}
+                    rowsMax={14}
+                    className={classes.textField}
+                    value={this.state.newPostText}
+                    onChange={e => this.setState({newPostText : e.target.value})}
+                />
+                  <Button variant="outlined" color="secondary" className={classes.modalButton}  onClick={this.submitPost}>
+                        Add
+                    </Button>
+                    <Button variant="outlined" color="secondary" className={classes.modalButton} onClick={this.handleClose}>
+                        Cancel
+                    </Button>
             </Typography>
             </div>
         </Modal>
@@ -209,7 +245,7 @@ class Blog extends React.Component<Blog.Props, Blog.State> {
                 noWrap
                 className={classes.toolbarTitle}
               >
-                Blog
+                Blog or Balrog...
               </Typography>
               <IconButton>
                 <SearchIcon />
@@ -278,7 +314,7 @@ class Blog extends React.Component<Blog.Props, Blog.State> {
                 {/* Main content */}
                 <Grid item xs={12} md={8}>
                   <Typography variant="title" gutterBottom>
-                    From the Firehose 
+                    From the Green Dragon Inn 
                     <Button color="primary" onClick={() => this.setState({open: true})} className={classes.button}>
                         Add New Post
                     </Button>
@@ -296,9 +332,6 @@ class Blog extends React.Component<Blog.Props, Blog.State> {
                           <Typography variant="headline" component="h2">
                             {post.title}
                           </Typography>
-                          <Typography className={classes.pos} color="textSecondary">
-                            {post.dateCreated}
-                          </Typography>
                           <Typography component="p">
                             {post.body}
                           </Typography>
@@ -315,7 +348,7 @@ class Blog extends React.Component<Blog.Props, Blog.State> {
                 <Grid item xs={12} md={4}>
                   <Paper elevation={0} className={classes.sidebarAboutBox}>
                     <Typography variant="title" gutterBottom>
-                      What's Ringin on the Ring
+                      What's The Ring Saying
                     </Typography>
                     <Typography>
                             Ash nazg thrakatulûk agh burzum-ishi krimpatul.
@@ -341,10 +374,10 @@ class Blog extends React.Component<Blog.Props, Blog.State> {
           {/* Footer */}
           <footer className={classes.footer}>
             <Typography variant="title" align="center" gutterBottom>
-              Footer
+              Never Forget
             </Typography>
             <Typography variant="subheading" align="center" color="textSecondary" component="p">
-              Something here to give the footer a purpose!
+                Tuor asked the name of the city, and Elemmakil made answer: "'Tis said and 'tis sung: 'Gondost am I called and Gondothrimbar, City of Stone and City of the Dwellers in Stone; Gondolin the Stone of Song and Gwarestrin am I named, the Tower of Guard, Garthoren or the Fenced Fort, for I am fenced from the eyes of Morgoth; but they who love me most greatly Tirion is born again, call me Loth, for like a flower am I, even Loth-a-laden, the Lily that blooms on the plain.' Yet," said he, "in our daily speech we speak and we name it mostly Gondolin."
             </Typography>
           </footer>
           </div>

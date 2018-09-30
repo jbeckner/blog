@@ -5,8 +5,6 @@ export interface Post {
     id: number;
     title: string;
     body: string;
-    dateCreated: Date;
-    dateModified: Date;
 }
 
 export class PostService {
@@ -38,8 +36,6 @@ export class PostService {
                     id: value.id,
                     title: value.title,
                     body: value.body,
-                    dateCreated: value.dateCreated,
-                    dateModified: value.dateModified
                 });
             });
 
@@ -54,8 +50,6 @@ export class PostService {
         let value = {
             title: post.title,
             body: post.body,
-            dateCreated: post.dateCreated,
-            dateModified: post.dateModified
         };
 
         return store.add(value).then(key => {
@@ -67,8 +61,6 @@ export class PostService {
                     id: value.id,
                     title: value.title,
                     body: value.body,
-                    dateCreated: value.dateCreated,
-                    dateModified: value.dateModified
                 };
 
                 return Promise.resolve<Post>(retVal);
